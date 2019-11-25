@@ -1,0 +1,7 @@
+{% extends 'templates/base.html' %}
+{% load filters %}
+{% block main %}
+
+{% get_tweets tweets user form 'true' %}
+
+{% endblock %}

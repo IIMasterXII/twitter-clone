@@ -1,0 +1,251 @@
+{% extends 'settings.html' %}
+
+{% block settings %}
+
+{% if tab == 'account' %}
+
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Account</strong>
+</div>
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Login and Security</strong>
+</div>
+<div class="list-group" id="list-tab" role="tablist">
+        <a class="list-group-item list-group-item-action" id="list-home-list" href="/settings/screen_name" role="tab" aria-controls="home">
+            Username
+            <p class="m-0 text-muted"><small>{{ user.twitterprofile.username }}</small></p>
+        </a>
+        <a class="list-group-item list-group-item-action" id="list-profile-list" href="/settings/phone" role="tab" aria-controls="profile">
+            Phone
+            <p class="m-0 text-muted"><small>{{ user.twitterprofile.phone_number }}</small></p>
+        </a>
+        <a class="list-group-item list-group-item-action" id="list-messages-list" href="/settings/email" role="tab" aria-controls="messages">
+            Email
+            <p class="m-0 text-muted"><small>{{ user.email }}</small></p>
+        </a>
+        <a class="list-group-item list-group-item-action" id="list-settings-list" href="/settings/password" role="tab" aria-controls="settings">Password</a>
+</div>
+
+{% elif tab == 'privacy' %}
+
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Privacy</strong>
+</div>
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Tweets</strong>
+</div>
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+        <div class="alert alert-danger">
+            <b>{{ error }}</b>
+        </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+<form class="border px-3 py-4" action="/settings/privacy" method="post">
+    {% csrf_token %}
+    {% if user.twitterprofile.private %}
+    <div class="alert alert-success" role="alert">
+        This account is currently <strong>PRIVATE.</strong>
+    </div>
+    {% else %}
+    <div class="alert alert-success" role="alert">
+        This account is currently <strong>NOT PRIVATE.</strong>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="col">
+            <label>Protect your Tweets</label>
+            <p class="m-0 text-muted"><small>Only show your Tweets to people who follow you. If selected, you will need to approve each new follower.</small></p>
+        </div>
+        <div class="col-auto">
+            <div class="form-check">
+                {% if user.twitterprofile.private %}
+                <input type="checkbox" onclick='window.location.assign("/settings/deactivateprivacy")' checked>
+                {% else %}
+                <input type="checkbox" onclick='window.location.assign("/settings/activateprivacy")'>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+
+{% elif tab == 'screen_name' %}
+
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Account</strong>
+</div>
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Login and Security</strong>
+</div>
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+        <div class="alert alert-danger">
+            <b>{{ error }}</b>
+        </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+<form class="border px-3 py-4" action="/settings/screen_name" method="post">
+	{% csrf_token %}
+
+    {% for field in form %}
+    <div class="form-group">
+        <label for="{{ form.field.id_for_label }}">{{ field.label }}:</label>
+        <div id="app">
+        {{ field }}
+        </div>
+            <script>
+                var app = new Vue({
+                  delimiters: ['[[', ']]'],
+                  el: '#app',
+                  data: {
+                    message: '{{ user.twitterprofile.username }}'
+                },
+                });
+            </script>
+    </div>
+    {% endfor %}
+
+    <input type="hidden" value="{{ request.path }}" name="redirect">
+    <input type="submit" value="Change Username" class="btn btn-primary">
+</form>
+
+{% elif tab == 'phone' %}
+
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Account</strong>
+</div>
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Login and Security</strong>
+</div>
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+        <div class="alert alert-danger">
+            <b>{{ error }}</b>
+        </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+<form class="border px-3 py-4" action="/settings/phone" method="post">
+    {% csrf_token %}
+    
+    {% for field in form %}
+    <div class="form-group">
+        <div id="app">
+        <h3 class="text-muted bg-light p-3"><strong>[[ phone_number | number ]]</strong></h3>
+            {{ field }}
+        </div>
+        <script>
+            var app = new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data: {
+                message: '{{ user.twitterprofile.phone_number }}',
+                edited: ''
+            },
+            computed: {
+                phone_number: function(){
+                    if (this.message.length === 0) {
+                        return '(xxx) xxx-xxxx'
+                    } else if (this.message.length < 3) {
+                        return this.message
+                    } else if (this.message.length <= 6) {
+                        return " (" + this.message.substring(0,3) + ") " + this.message.substring(3,this.message.length)
+                    }
+                    return " (" + this.message.substring(0,3) + ") " + this.message.substring(3,6) + "-" + this.message.substring(6,10);
+                }
+            },
+            methods: { 
+
+            }
+            });
+        </script>
+    </div>
+    {% endfor %}
+    
+    <input type="hidden" value="{{ request.path }}" name="redirect">
+    <input type="submit" value="Change Phone Number" class="btn btn-primary">
+</form>
+
+{% elif tab == 'email' %}
+
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Account</strong>
+</div>
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Login and Security</strong>
+</div>
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+        <div class="alert alert-danger">
+            <b>{{ error }}</b>
+        </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+<form class="border px-3 py-4" action="/settings/email" method="post">
+	{% csrf_token %}
+
+    {% for field in form %}
+    <div class="form-group">
+        <label for="{{ form.field.id_for_label }}">{{ field.label }}:</label>
+        <div id="app">
+            {{ field }}
+        </div>
+        <script>
+            var app = new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data: {
+                message: '{{ user.email }}'
+            },
+            });
+        </script>
+    </div>
+    {% endfor %}
+
+    <input type="hidden" value="{{ request.path }}" name="redirect">
+    <input type="submit" value="Change Email" class="btn btn-primary">
+</form>
+
+{% elif tab == 'password' %}
+
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Account</strong>
+</div>
+<div class="border px-3 py-3 h5 m-0">
+    <strong>Login and Security</strong>
+</div>
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+        <div class="alert alert-danger">
+            <b>{{ error }}</b>
+        </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+<form class="border px-3 py-4" action="/settings/password" method="post">
+	{% csrf_token %}
+
+    {% for field in form %}
+    <div class="form-group">
+        <label for="{{ form.field.id_for_label }}">{{ field.label }}:</label>
+        <div id="app">
+            {{ field }}
+        </div>
+    </div>
+    {% endfor %}
+
+    <input type="hidden" value="{{ request.path }}" name="redirect">
+    <input type="submit" value="Change Password" class="btn btn-primary">
+</form>
+
+{% endif %}
+
+{% endblock %}

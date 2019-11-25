@@ -1,0 +1,244 @@
+{% extends 'templates/base.html' %}
+{% load filters %}
+{% load static %}
+
+
+{% block main %}
+<div class="row">
+
+  <div class="col-9 border p-0">
+    <div class="container-fluid p-0 mb-3">
+    {% if user.twitterprofile.profile_banner %}
+    <img src='{{ user.twitterprofile.profile_banner.url }}' class="container-fluid p-0">
+    {% else %}
+    <img src='{% static 'images/banner.jpg' %}' class="container-fluid p-0">
+    {% endif %}
+    <div class="container-fluid p-0">
+      <div class="container-fluid mt-2 mb-2 d-flex justify-content-end position-relative">
+        {% if user.twitterprofile.profile_picture %}
+        <a class="d-flex position-absolute ml-3 profile-picture" href="/{{ user.username }}/" style="bottom:0;left:0;">
+          <img src='{{ user.twitterprofile.profile_picture.url }}' class="w-100 h-100 p-1 bg-light rounded-circle">
+        </a>
+        {% else %}
+        <a class="d-flex position-relative ml-3 profile-picture" href="/{{ user.username }}/" style="bottom:0;left:0;">
+          <img src="{% static 'images/profile.jpg' %}" class="w-100 h-100 p-1 bg-light rounded-circle">
+        </a>
+        {% endif %}
+            <!-- Button trigger modal -->
+        {% ifequal request.user user %}
+        <button type="button" class="btn btn-outline-primary font-weight-bold" data-toggle="modal" data-target="#infomodel">
+            Edit Profile
+        </button>
+        
+        <!-- Modal -->
+        <div class="modal fade" id="infomodel" tabindex="-1" role="dialog" aria-labelledby="infomodel" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id="infophoto">
+                  <form method="post" action="/{{ request.user.username }}/" enctype="multipart/form-data" id="formUpload">
+                    <div v-if="!cropperActive" class="container-fluid position-relative p-0">
+                      <label for="id_banner_picture" class="preview container-fluid p-0 position-relative">
+                          <div class="position-absolute justify-content-center align-center align-items-center d-flex w-100 h-100 rounded-circle">
+                              <span class="oi oi-camera-slr h4 m-0 text-light p-3 rounded-circle"></span>
+                          </div>
+                          <img v-if="banner_thumb" :src="banner_thumb" class="w-100 h-100 p-1"/>
+                      </label>
+                      <label for="id_profile_picture" class="preview d-flex position-absolute profile-picture ml-3" style="bottom:-50px;">
+                          <div class="position-absolute justify-content-center align-center align-items-center d-flex w-100 h-100 rounded-circle">
+                              <span class="oi oi-camera-slr h4 m-0 text-light p-3 rounded-circle"></span>
+                          </div>
+                          <img v-if="profile_thumb" :src="profile_thumb" class="w-100 h-100 p-1 bg-light rounded-circle" />
+                      </label>
+                    </div>
+                    <cropper
+                      v-if="banner_url" 
+                      :src="banner_url"
+                      :stencil-props="{ aspectRatio: 3/1 }"
+                      ref="cropper"
+                      @change="banner_change"
+                      class="mb-2 cropper"
+                    ></cropper>
+                    <div class="mb-4 d-flex justify-content-end">
+                      <button v-if="banner_url" type="button" class="btn btn-primary" @click="banner_apply">
+                          Apply
+                      </button>
+                    </div>
+                    <cropper
+                      v-if="profile_url" 
+                      :src="profile_url"
+                      :stencil-props="{ aspectRatio: 1/1 }"
+                      ref="cropper"
+                      @change="profile_change"
+                      class="mb-2 cropper"
+                    ></cropper>
+                    <div class="mb-4 d-flex justify-content-end">
+                      <button v-if="profile_url" type="button" class="btn btn-primary" @click="profile_apply">
+                          Apply
+                      </button>
+                    </div>
+                    {% csrf_token %}
+                    {{ infoform.banner_picture }}
+                    {{ infoform.profile_picture }}
+                    {{ infoform.p_x }}
+                    {{ infoform.p_y }}
+                    {{ infoform.p_width }}
+                    {{ infoform.p_height }}
+                    {{ infoform.b_x }}
+                    {{ infoform.b_y }}
+                    {{ infoform.b_width }}
+                    {{ infoform.b_height }}
+                    <div class="mb-4">
+                      <div class="input-label" v-bind:class="{ 'input-label-active': user_focus }">
+                        Name<small class="float-right p-0 m-0"><span v-text="(max_user - username.length)"></span>/<span v-text="max_user"></span></small>
+                      </div>
+                      {{ infoform.username }}
+                    </div>
+                    <div class="mb-4">
+                      <div class="input-label" v-bind:class="{ 'input-label-active': bio_focus }">
+                        Bio<small class="float-right p-0 m-0"><span v-text="(max_bio - bio.length)"></span>/<span v-text="max_bio"></span></small>
+                      </div>
+                      {{ infoform.biography }}
+                    </div>
+                    <input type="hidden" value="{{ request.path }}" name="redirect">
+                    <input type="submit" value="Save" name="infoform" class="btn btn-primary float-right">
+                  </form>
+              </div>
+              <div class="modal-footer">
+              </div>
+            </div>
+          </div>
+        </div>  
+        {% endifequal %}    
+      </div>
+      <div class="container-fluid mt-1 mb-1">
+          <h4 class="m-0 font-weight-bold">{{ user.twitterprofile.username }}</h4>
+          <h6 class="m-0 text-secondary font-italic">@{{ user.username }}</h6>
+      </div>
+      <div class="container-fluid">
+          <p class="mt-1 mb-1">{{ user.twitterprofile.biography }}</p>
+      </div>
+      <div class="container-fluid">
+          {% if user.twitterprofile.phone_number %}
+          <p class="text-secondary mt-1 mb-1"><span class="oi oi-phone mr-2"></span>{{ user.twitterprofile.phone_number }}</p>
+          {% endif %}
+          <p class="text-secondary mt-1 mb-1"><span class="oi oi-calendar mr-2"></span>Joined {{ user.date_joined|date:"F j, Y" }}</p>
+      </div>
+    </div>
+    </div>
+
+    <div class="container-fluid border-top pt-3 pb-3 border-bottom">
+      <b>{{ user.twitterprofile.follows.count }}</b> <a href="/{{ user.username }}/follows/" class="text-secondary font-weight-normal mr-3">Following</a>
+      <b>{{ user.twitterprofile.followed_by.count }}</b> <a href="/{{ user.username }}/followers/" class="text-secondary font-weight-normal">Followers</a>
+    </div>
+    {% ifnotequal request.user user %}
+
+      {% if request.user.twitterprofile in user.twitterprofile.followed_by.all %}
+        <a href="/{{ user.username }}/stopfollow/" class="btn btn-danger">Stop follow</a>
+      {% else %}
+        <a href="/{{ user.username }}/follow/" class="btn btn-success">Follow</a>
+      {% endif %}
+    {% endifnotequal %}
+
+
+
+    <!-- Feed -->
+    <nav class="nav nav-justified border-bottom">
+        <button onclick="profileTab('')" class="profile-tab p-2 font-weight-bold nav-item btn {% if not tab %}active{% endif %}">Tweets</button>
+        <button onclick="profileTab('')" class="profile-tab p-2 font-weight-bold nav-item btn">Tweets & Replies</button>
+        <button onclick="profileTab('')" class="profile-tab p-2 font-weight-bold nav-item btn">Media</button>
+        <button onclick="profileTab('likes')" class="profile-tab p-2 font-weight-bold nav-item btn {% if tab == 'likes' %}active{% endif %}">Likes</button>
+    </nav>
+    <div>
+        {% if request.user == user or request.user.twitterprofile in user.twitterprofile.followed_by.all and user.twitterprofile.private or not user.twitterprofile.private  %}
+          {% if tab %}
+            {% if liked.all %}
+              {% get_tweets liked.all request.user form %}
+            {% endif %}
+          {% else %}
+            {% if user.tweets.all %}
+              {% get_tweets user.tweets.all request.user form %}
+            {% endif %}
+          {% endif %}
+        {% else %}
+        <p>This user's profile is set to Private.</p>
+        {% endif %}
+    </div>
+
+  </div>
+
+
+</div>
+
+<script>
+  const vm = new Vue({
+    el: '#infophoto',
+    data() {
+      return {
+        banner_coordinates: {
+          width: 0,
+          height: 0,
+          left: 0,
+          top: 0
+        },
+        profile_coordinates: {
+          width: 0,
+          height: 0,
+          left: 0,
+          top: 0
+        },
+        profile_thumb: '{{ user.twitterprofile.profile_picture.url }}',
+        banner_thumb: '{% if user.twitterprofile.profile_banner %}{{ user.twitterprofile.profile_banner.url }}{% else %}{% static 'images/banner.jpg' %}{% endif %}',
+        profile_url: null,
+        banner_url: null,
+        username: '{{ user.twitterprofile.username }}',
+        max_user: 50,
+        user_focus:false,
+        bio: '{{ user.twitterprofile.biography }}',
+        bio_focus:false,
+        max_bio: 160,
+        cropperActive: false,
+      }
+    },
+    methods: {
+      onBannerChange(e) {
+        const file = e.target.files[0];
+        this.banner_url = URL.createObjectURL(file);
+        this.cropperActive = true;
+      },
+      onProfileChange(e) {
+        const file = e.target.files[0];
+        this.profile_url = URL.createObjectURL(file);
+        this.cropperActive = true;
+      },
+      profile_change({coordinates, canvas}) {
+        this.profile_coordinates = coordinates
+        this.profile_thumb = canvas.toDataURL()
+      },
+      banner_change({coordinates, canvas}) {
+        this.banner_coordinates = coordinates
+        this.banner_thumb = canvas.toDataURL()
+      },
+      banner_apply() {
+        this.banner_url = null;
+        this.cropperActive = false;
+		  },
+      profile_apply() {
+        this.profile_url = null;
+        this.cropperActive = false;
+		  }
+    }
+  });
+
+  function profileTab (tab){
+    history.replaceState(null,null, "/{{ user.username }}/" + tab);
+    location.reload();
+  }
+
+</script>
+{% endblock %}

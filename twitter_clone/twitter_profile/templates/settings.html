@@ -1,0 +1,29 @@
+{% extends 'templates/base.html' %}
+
+
+{% block main %}
+<div class="container-fluid">
+        <div class="row">
+                <div class="col-4 border-right">
+                    <div class="border px-3 py-3 h5 m-0">
+                        <strong>Settings</strong>
+                    </div>
+                    <div class="border px-3 py-3 h5 m-0">
+                        <strong>@{{ user.username }}</strong>
+                    </div>
+                    <div class="list-group" id="list-tab" role="tablist">
+                        <a class="list-group-item list-group-item-action" id="list-home-list" href="/settings/account" role="tab" aria-controls="home">Account</a>
+                        <a class="list-group-item list-group-item-action" id="list-profile-list" href="/settings/privacy" role="tab" aria-controls="profile">Privacy & Safety</a>
+                        <a class="list-group-item list-group-item-action" id="list-messages-list" href="/settings/notifications" role="tab" aria-controls="messages">Notifications</a>
+                        <a class="list-group-item list-group-item-action" id="list-settings-list" href="/settings/preferences" role="tab" aria-controls="settings">Content Preferences</a>
+                    </div>
+                </div>
+                <div class="col-8">
+                  <div class="tab-content" id="nav-tabContent">
+                        {% block settings %}
+                        {% endblock %}
+                  </div>
+                </div>
+              </div>
+</div>
+{% endblock %}
